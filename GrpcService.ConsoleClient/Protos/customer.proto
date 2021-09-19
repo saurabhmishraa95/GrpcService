@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+option csharp_namespace = "GrpcService.ConsoleClient";
+
+package customer;
+
+service CustomerInfo{
+	rpc GetCustomer (CustomerRequest) returns (CustomerResponse);
+	rpc GetCustomerStream (EmptyRequest) returns (stream CustomerResponse);
+}
+
+message EmptyRequest{
+
+}
+message CustomerRequest{
+	int32 userid = 1;
+}
+
+message CustomerResponse{
+	int32 id = 1;
+	string name = 2;
+	bool hasPurchaseHistory = 3;
+	string email = 4;
+}

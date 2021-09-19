@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+option csharp_namespace = "GrpcService.Server";
+
+package duplex;
+
+service Messanger {
+  rpc SendMessage (Message) returns (stream Message);
+}
+
+message Message {
+  string text = 1;
+}
