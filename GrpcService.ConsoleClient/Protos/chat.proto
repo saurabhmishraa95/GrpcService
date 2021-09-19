@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+option csharp_namespace = "GrpcService.ConsoleClient";
+
+package chat;
+
+service Messanger {
+  rpc CreateChat (stream Message) returns (stream Message);
+}
+
+message Message {
+  string text = 1;
+}

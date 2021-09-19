@@ -8,13 +8,28 @@ namespace GrpcService.Server.Services
 {
     public class MessageService : Messanger.MessangerBase
     {
-        public override async Task SendMessage(Message request, IServerStreamWriter<Message> responseStream, ServerCallContext context)
+        public override async Task CreateChat(IAsyncStreamReader<Message> requestStream, IServerStreamWriter<Message> responseStream, ServerCallContext context)
         {
-            while (true)
+            var readMessageTask = ReadMessage(requestStream, context);
+            var writeMessageTask = WriteMessage(responseStream, context);
+
+            await Task.WhenAll(readMessageTask, writeMessageTask);
+        }
+
+        private static async Task WriteMessage(IServerStreamWriter<Message> responseStream, ServerCallContext context)
+        {
+            while (!context.CancellationToken.IsCancellationRequested)
             {
-                string text = Console.ReadLine();
-                var message = new Message { Text = text };
-                await responseStream.WriteAsync(message);
+                var text = Console.ReadLine();
+                await responseStream.WriteAsync(new Message { Text = text });
+            }
+        }
+
+        private static async Task ReadMessage(IAsyncStreamReader<Message> requestStream, ServerCallContext context)
+        {
+            while (await requestStream.MoveNext() && !context.CancellationToken.IsCancellationRequested)
+            {
+                Console.WriteLine($"Recieved: {requestStream.Current.Text}");
             }
         }
     }

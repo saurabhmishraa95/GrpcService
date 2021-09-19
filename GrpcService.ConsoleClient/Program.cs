@@ -1,4 +1,5 @@
-﻿using Grpc.Net.Client;
+﻿using Grpc.Core;
+using Grpc.Net.Client;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
@@ -21,19 +22,46 @@ namespace GrpcService.ConsoleClient
             //}
 
             // streaming using grpc
-            var customerClient = new CustomerInfo.CustomerInfoClient(channel);
-            using (var reply = customerClient.GetCustomerStream(new EmptyRequest()))
+            //var customerClient = new CustomerInfo.CustomerInfoClient(channel);
+            //using (var reply = customerClient.GetCustomerStream(new EmptyRequest()))
+            //{
+            //    CustomerResponse customerResponse;
+            //    while(await reply.ResponseStream.MoveNext(new CancellationToken()))
+            //    {
+            //        customerResponse = reply.ResponseStream.Current;
+            //        Console.WriteLine($"Id: {customerResponse.Id} Name: {customerResponse.Name} Email: {customerResponse.Email}");
+            //    }
+            //}
+
+            var chatClient = new Messanger.MessangerClient(channel);
+            using (var chat = chatClient.CreateChat())
             {
-                CustomerResponse customerResponse;
-                while(await reply.ResponseStream.MoveNext(new CancellationToken()))
-                {
-                    customerResponse = reply.ResponseStream.Current;
-                    Console.WriteLine($"Id: {customerResponse.Id} Name: {customerResponse.Name} Email: {customerResponse.Email}");
-                }
+                var readMessageTask = ReadMessage(chat);
+                var writeMessageTask = WriteMessage(chat);
+
+                await Task.WhenAll(readMessageTask, writeMessageTask);
+
             }
 
+            //Console.ReadKey();
+        }
 
-            Console.ReadKey();
+        private static async Task ReadMessage(AsyncDuplexStreamingCall<Message, Message> chat)
+        {
+            var cancellationToken = new CancellationToken();
+            while (await chat.ResponseStream.MoveNext(cancellationToken))
+            {
+                Console.WriteLine($"Recieved: {chat.ResponseStream.Current.Text}");
+            }
+        }
+
+        private static async Task WriteMessage(AsyncDuplexStreamingCall<Message, Message> chat)
+        {
+            while (true)
+            {
+                string text = Console.ReadLine();
+                await chat.RequestStream.WriteAsync(new Message { Text = text });
+            }
         }
     }
 }

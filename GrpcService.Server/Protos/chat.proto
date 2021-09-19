@@ -2,10 +2,10 @@ syntax = "proto3";
 
 option csharp_namespace = "GrpcService.Server";
 
-package duplex;
+package chat;
 
 service Messanger {
-  rpc SendMessage (Message) returns (stream Message);
+  rpc CreateChat (stream Message) returns (stream Message);
 }
 
 message Message {
